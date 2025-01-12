@@ -3,14 +3,17 @@ package com.example.radio.practic.service;
 import com.example.radio.practic.domain.Piesa;
 import com.example.radio.practic.repository.Repository;
 import com.example.radio.practic.repository.SQLPiesaRepository;
+import com.example.radio.practic.repository.SQLPlaylistRepository;
 
 import java.util.*;
 
 public class PiesaService {
     private final Repository<Piesa> piesaRepository;
+    private SQLPlaylistRepository playlistRepository;
 
-    public PiesaService(Repository<Piesa> piesaRepository) {
-        this.piesaRepository = piesaRepository;
+    public PiesaService(Repository<Piesa> repository, SQLPlaylistRepository playlistRepository) {
+        this.piesaRepository = repository;
+        this.playlistRepository = playlistRepository;
     }
 
     public Piesa getPiesaById(int id) {
@@ -38,38 +41,46 @@ public class PiesaService {
         piesaRepository.add(new Piesa(5, "f3", "t1", "g5", "05:55"));
     }
 
+    // Metoda pentru a salva un playlist
     public void savePlaylist(String playlistName, List<Piesa> playlist) {
-        if (piesaRepository instanceof SQLPiesaRepository) {
-            SQLPiesaRepository sqlRepository = (SQLPiesaRepository) piesaRepository;
-            sqlRepository.savePlaylist(playlistName, playlist);
-        }
+        playlistRepository.savePlaylist(playlistName, playlist);
     }
 
     public List<Piesa> generatePlaylist() {
         List<Piesa> allPiese = getAllPiese();
         List<Piesa> playlist = new ArrayList<>();
-        Set<String> lastFormatieUsed = new HashSet<>();
-        Set<String> lastGenUsed = new HashSet<>();
-        int totalDurationInMinutes = 0;
+        int totalDuration = 0;
 
-        Random rand = new Random();
+        for (Piesa piesa : allPiese) {
+            // Convertim durata piesei în secunde (dacă nu este deja în acest format)
+            int piesaDuration = parseDurationToSeconds(piesa.getDurata());
 
-        while (totalDurationInMinutes < 15 && !allPiese.isEmpty()) {
-            Piesa selectedPiesa = allPiese.remove(rand.nextInt(allPiese.size()));
-
-            if (!lastFormatieUsed.contains(selectedPiesa.getFormatie()) &&
-                    !lastGenUsed.contains(selectedPiesa.getGen())) {
-
-                playlist.add(selectedPiesa);
-                lastFormatieUsed.add(selectedPiesa.getFormatie());
-                lastGenUsed.add(selectedPiesa.getGen());
-
-                String[] durataSplit = selectedPiesa.getDurata().split(":");
-                int durataMinute = Integer.parseInt(durataSplit[0]) * 60 + Integer.parseInt(durataSplit[1]);
-                totalDurationInMinutes += durataMinute;
+            if (totalDuration + piesaDuration <= 900) { // 900 secunde = 15 minute
+                playlist.add(piesa);
+                totalDuration += piesaDuration;
+            } else {
+                break; // Ne oprim dacă depășim 15 minute
             }
+        }
+
+        if (playlist.isEmpty()) {
+            throw new RuntimeException("Nu există suficiente piese pentru a crea un playlist de minim 15 minute.");
         }
 
         return playlist;
     }
+
+
+    // Metodă pentru a converti durata de tip "mm:ss" în secunde
+    private int parseDurationToSeconds(String durata) {
+        String[] parts = durata.split(":");
+        int minutes = Integer.parseInt(parts[0]);
+        int seconds = Integer.parseInt(parts[1]);
+        return minutes * 60 + seconds;
+    }
+
+    public List<Piesa> getPieseFromPlaylist(String playlistName) {
+        return playlistRepository.getPieseFromPlaylist(playlistName);
+    }
+
 }

@@ -14,19 +14,29 @@
     </padding>
 
     <!-- Cerința 1: Afișare listă ordonată -->
-    <Text strokeType="OUTSIDE" strokeWidth="0.0" text="1. Lista piese (ordonate dupa formatie si titlu):" wrappingWidth="757.10546875" />
-    <ListView fx:id="listViewPieseOrdonate" prefHeight="102.0" prefWidth="758.0" />
+    <Text text="1. Lista piese (ordonate după formație și titlu):" wrappingWidth="757.10546875" />
+    <ListView fx:id="listViewPieseOrdonate" prefHeight="231.0" prefWidth="758.0" />
 
     <!-- Cerința 2: Filtrare și căutare -->
-    <Text strokeType="OUTSIDE" strokeWidth="0.0" text="2. Filtrare lista de piese:" wrappingWidth="757.10546875" />
+    <Text text="2. Filtrare lista de piese:" wrappingWidth="757.10546875" />
     <TextField fx:id="searchField" promptText="Introduceți textul pentru căutare" />
     <HBox alignment="CENTER" spacing="10.0">
         <Button onAction="#handleSearch" text="Căutare" />
         <Button onAction="#handleReset" text="Resetare" />
     </HBox>
-    <ListView fx:id="listViewPieseFiltrate" prefHeight="200.0" prefWidth="200.0" />
+    <ListView fx:id="listViewPieseFiltrate" prefHeight="179.0" prefWidth="758.0" />
 
-    <!-- Cerinta 3: -->
-    <TextField fx:id="playlistNameField" promptText="Introduceți numele listei de redare" />
-    <Button text="Creează Lista de Redare" onAction="#handleCreatePlaylist" />
+    <!-- Cerința 3: Creare playlist -->
+    <Text text="3. Creare playlist:" wrappingWidth="757.10546875" />
+    <TextField fx:id="createPlaylistNameField" promptText="Introduceți numele listei de redare" />
+    <HBox alignment="CENTER" spacing="10.0">
+        <Button onAction="#handleCreatePlaylist" text="Creează Lista de Redare" />
+        <Button onAction="#handleSavePlaylist" text="Salvează Playlist" />
+    </HBox>
+
+    <!-- Cerința 4: Încărcare playlist -->
+    <Text text="4. Încărcare playlist:" wrappingWidth="757.10546875" />
+    <TextField fx:id="loadPlaylistNameField" promptText="Introduceți numele playlistului pentru încărcare" />
+    <Button onAction="#handleLoadPlaylist" text="Încarcă Playlist" />
+    <ListView fx:id="listViewLoadedPlaylist" prefHeight="179.0" prefWidth="758.0" />
 </VBox>

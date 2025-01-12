@@ -1,37 +1,39 @@
 package com.example.radio;
 
-import com.example.radio.practic.service.PiesaService;
 import com.example.radio.practic.domain.Piesa;
+import com.example.radio.practic.service.PiesaService;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Random;
-import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.ArrayList;
 
 public class HelloController {
     private PiesaService service;
 
-    // listview pentru cerinta1
     @FXML
     private ListView<Piesa> listViewPieseOrdonate;
 
-    // listview pentru cerinta2
     @FXML
     private ListView<Piesa> listViewPieseFiltrate;
 
-    // pt cerinta3
     @FXML
     private TextField playlistNameField;
 
     @FXML
     private TextField searchField;
+
+    @FXML
+    private ListView<Piesa> listViewLoadedPlaylist;
+
+    @FXML
+    private TextField loadPlaylistNameField; // Pentru încărcarea playlistului
+
+    @FXML
+    private TextField createPlaylistNameField; // Pentru crearea playlistului
 
     private ObservableList<Piesa> observablePieseOrdonate = FXCollections.observableArrayList();
     private ObservableList<Piesa> observablePieseFiltrate = FXCollections.observableArrayList();
@@ -44,17 +46,14 @@ public class HelloController {
     @FXML
     private void initialize() {
         if (service != null) {
-            // cerinta 1
             List<Piesa> sortedList = ordonateFormatieTitlu();
             observablePieseOrdonate.setAll(sortedList);
             listViewPieseOrdonate.setItems(observablePieseOrdonate);
-
-            // cerinta 2
             listViewPieseFiltrate.setItems(observablePieseFiltrate);
         }
     }
 
-    public List<Piesa> ordonateFormatieTitlu() {
+    private List<Piesa> ordonateFormatieTitlu() {
         return service.ordonateFormatieTitlu();
     }
 
@@ -63,11 +62,10 @@ public class HelloController {
         String searchText = searchField.getText().trim().toLowerCase();
 
         if (searchText.isEmpty()) {
-            showAlert("Cautare invalida", "Textul de cautare este gol!", "Introduceti un text valid pentru a cauta.", AlertType.WARNING);
+            showAlert("Căutare invalidă", "Textul de căutare este gol!", "Introduceți un text valid.", AlertType.WARNING);
             return;
         }
 
-        // filtrare
         List<Piesa> filteredList = service.getAllPiese().stream()
                 .filter(p -> p.getFormatie().toLowerCase().contains(searchText) ||
                         p.getTitlu().toLowerCase().contains(searchText) ||
@@ -76,12 +74,11 @@ public class HelloController {
                 .collect(Collectors.toList());
 
         if (filteredList.isEmpty()) {
-            showAlert("Niciun rezultat", "Cautarea nu a returnat rezultate.", "Nicio piesa nu corespunde cautarii.", AlertType.INFORMATION);
+            showAlert("Niciun rezultat", "Nu s-au găsit piese.", "Nici o piesă nu corespunde căutării.", AlertType.INFORMATION);
         } else {
             observablePieseFiltrate.setAll(filteredList);
         }
     }
-
 
     @FXML
     private void handleReset() {
@@ -91,57 +88,76 @@ public class HelloController {
 
     @FXML
     private void handleCreatePlaylist() {
+        String playlistName = playlistNameField.getText().trim();
+        if (playlistName.isEmpty()) {
+            showAlert("Eroare", "Numele playlistului este gol", "Introduceți un nume pentru playlist.", AlertType.ERROR);
+            return;
+        }
+
         try {
-            String playlistName = playlistNameField.getText();  // Numele listei de redare din căsuța editabilă
-            if (playlistName.isEmpty()) {
-                showAlert("Eroare", "Numele listei de redare", "Vă rugăm să introduceți un nume pentru playlist.", Alert.AlertType.ERROR);
+            List<Piesa> playlist = service.generatePlaylist();
+
+            if (playlist == null || playlist.isEmpty()) {
+                showAlert("Eroare", "Playlist gol", "Nu există suficiente piese.", AlertType.ERROR);
                 return;
             }
 
-            List<Piesa> playlist = service.generatePlaylist();
             service.savePlaylist(playlistName, playlist);
-
-            showAlert("Succes", "Playlist salvat", "Lista de redare a fost salvată cu succes!", Alert.AlertType.INFORMATION);
+            showAlert("Succes", "Playlist salvat", "Playlistul a fost salvat cu succes.", AlertType.INFORMATION);
         } catch (Exception e) {
-            showAlert("Eroare", "Creare playlist", e.getMessage(), Alert.AlertType.ERROR);
+            showAlert("Eroare", "Salvare eșuată", e.getMessage(), AlertType.ERROR);
         }
     }
 
-    private List<Piesa> generatePlaylist(List<Piesa> allPiese) {
-        List<Piesa> playlist = new ArrayList<>();
-        Set<String> usedFormatii = new HashSet<>();
-        Set<String> usedGenuri = new HashSet<>();
-        double totalDuration = 0;
 
-        Random random = new Random();
-        while (totalDuration < 15 * 60) {  // 15 minute = 900 secunde
-            Piesa randomPiesa = allPiese.get(random.nextInt(allPiese.size()));
+    @FXML
+    private void handleSavePlaylist() {
+        String playlistName = createPlaylistNameField.getText();
 
-            // Verificăm dacă putem adăuga piesa la lista de redare
-            if (!usedFormatii.contains(randomPiesa.getFormatie()) &&
-                    !usedGenuri.contains(randomPiesa.getGen())) {
-                playlist.add(randomPiesa);
-                usedFormatii.add(randomPiesa.getFormatie());
-                usedGenuri.add(randomPiesa.getGen());
-                totalDuration += parseDuration(randomPiesa.getDurata());
-            }
-
-            // Dacă durata totală depășește 15 minute, terminăm selecția
-            if (totalDuration > 15 * 60) {
-                break;
-            }
+        if (playlistName.isEmpty()) {
+            showAlert("Eroare", "Numele playlistului este gol", "Vă rugăm să introduceți un nume pentru playlist.", Alert.AlertType.ERROR);
+            return;
         }
 
-        // Dacă lista este goală (nu am putut selecta piesele), returnăm null
-        if (playlist.isEmpty()) {
-            return null;
+        try {
+            // Generăm un playlist
+            List<Piesa> playlist = service.generatePlaylist();
+
+            if (playlist == null || playlist.isEmpty()) {
+                showAlert("Eroare", "Playlist gol", "Nu există piese suficiente pentru a crea un playlist.", Alert.AlertType.ERROR);
+                return;
+            }
+
+            // Salvăm playlistul
+            service.savePlaylist(playlistName, playlist);
+            showAlert("Succes", "Playlist salvat", "Playlistul a fost salvat cu succes!", Alert.AlertType.INFORMATION);
+        } catch (Exception e) {
+            showAlert("Eroare", "Salvarea playlistului a eșuat", e.getMessage(), Alert.AlertType.ERROR);
         }
-        return playlist;
     }
 
-    private double parseDuration(String durata) {
-        String[] parts = durata.split(":");
-        return Integer.parseInt(parts[0]) * 60 + Integer.parseInt(parts[1]);
+    @FXML
+    private void handleLoadPlaylist() {
+        String playlistName = loadPlaylistNameField.getText().trim();
+
+        if (playlistName.isEmpty()) {
+            showAlert("Eroare", "Numele playlistului este gol", "Introduceți un nume de playlist pentru a-l încărca.", Alert.AlertType.ERROR);
+            return;
+        }
+
+        try {
+            // Obținem piesele din playlist
+            List<Piesa> playlist = service.getPieseFromPlaylist(playlistName);
+
+            if (playlist == null || playlist.isEmpty()) {
+                showAlert("Eroare", "Playlist gol", "Playlistul nu conține piese sau nu există.", Alert.AlertType.ERROR);
+            } else {
+                listViewLoadedPlaylist.setItems(FXCollections.observableArrayList(playlist));
+                showAlert("Succes", "Playlist încărcat", "Playlistul a fost încărcat cu succes!", Alert.AlertType.INFORMATION);
+            }
+        } catch (Exception e) {
+            showAlert("Eroare", "Încărcare eșuată", e.getMessage(), Alert.AlertType.ERROR);
+        }
     }
 
     private void showAlert(String title, String header, String content, AlertType alertType) {
