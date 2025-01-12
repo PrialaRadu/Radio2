@@ -146,7 +146,6 @@ public class HelloController {
         }
 
         try {
-            // Obținem piesele din playlist
             List<Piesa> playlist = service.getPieseFromPlaylist(playlistName);
 
             if (playlist == null || playlist.isEmpty()) {

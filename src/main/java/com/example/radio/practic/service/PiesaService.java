@@ -5,6 +5,11 @@ import com.example.radio.practic.repository.Repository;
 import com.example.radio.practic.repository.SQLPiesaRepository;
 import com.example.radio.practic.repository.SQLPlaylistRepository;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.ArrayList;
+
+
 import java.util.*;
 
 public class PiesaService {
@@ -32,13 +37,18 @@ public class PiesaService {
         return lst;
     }
 
-    // 5 exemple piese
+    // exemple piese
     public void addSamplePiese() {
         piesaRepository.add(new Piesa(1, "f1", "t1", "g1", "01:00"));
         piesaRepository.add(new Piesa(2, "f5", "t3", "g2", "03:24"));
         piesaRepository.add(new Piesa(3, "f3", "t7", "g3", "04:03"));
         piesaRepository.add(new Piesa(4, "f3", "t5", "g4", "04:25"));
-        piesaRepository.add(new Piesa(5, "f3", "t1", "g5", "05:55"));
+        piesaRepository.add(new Piesa(5, "f3", "t1", "g5", "02:35"));
+        piesaRepository.add(new Piesa(6, "f5", "t1", "g5", "03:02"));
+        piesaRepository.add(new Piesa(7, "f1", "t1", "g3", "01:55"));
+        piesaRepository.add(new Piesa(8, "f1", "t1", "g2", "05:55"));
+        piesaRepository.add(new Piesa(9, "f1", "t1", "g2", "03:33"));
+        piesaRepository.add(new Piesa(10, "f5", "t1", "g1", "02:47"));
     }
 
     // Metoda pentru a salva un playlist
@@ -51,16 +61,26 @@ public class PiesaService {
         List<Piesa> playlist = new ArrayList<>();
         int totalDuration = 0;
 
+        Collections.shuffle(allPiese);
+
+        Piesa previousPiesa = null;
+
         for (Piesa piesa : allPiese) {
-            // Convertim durata piesei în secunde (dacă nu este deja în acest format)
             int piesaDuration = parseDurationToSeconds(piesa.getDurata());
 
-            if (totalDuration + piesaDuration <= 900) { // 900 secunde = 15 minute
-                playlist.add(piesa);
-                totalDuration += piesaDuration;
-            } else {
-                break; // Ne oprim dacă depășim 15 minute
+            if (totalDuration + piesaDuration > 900) {
+                break;
             }
+
+            if (previousPiesa != null &&
+                    (piesa.getFormatie().equals(previousPiesa.getFormatie()) ||
+                            piesa.getGen().equals(previousPiesa.getGen()))) {
+                continue;
+            }
+
+            playlist.add(piesa);
+            totalDuration += piesaDuration;
+            previousPiesa = piesa;
         }
 
         if (playlist.isEmpty()) {
@@ -71,7 +91,6 @@ public class PiesaService {
     }
 
 
-    // Metodă pentru a converti durata de tip "mm:ss" în secunde
     private int parseDurationToSeconds(String durata) {
         String[] parts = durata.split(":");
         int minutes = Integer.parseInt(parts[0]);

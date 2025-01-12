@@ -26,7 +26,7 @@ public class IdGenerator {
         return id;
     }
 
-    // scrie in fisier noul ID generat pt a-l stoca
+
     private void saveCurrentId(int id) {
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(FILE_NAME))) {
             bw.write(String.valueOf(id));

@@ -33,10 +33,4 @@
         <Button onAction="#handleCreatePlaylist" text="Creează Lista de Redare" />
         <Button onAction="#handleSavePlaylist" text="Salvează Playlist" />
     </HBox>
-
-    <!-- Cerința 4: Încărcare playlist -->
-    <Text text="4. Încărcare playlist:" wrappingWidth="757.10546875" />
-    <TextField fx:id="loadPlaylistNameField" promptText="Introduceți numele playlistului pentru încărcare" />
-    <Button onAction="#handleLoadPlaylist" text="Încarcă Playlist" />
-    <ListView fx:id="listViewLoadedPlaylist" prefHeight="179.0" prefWidth="758.0" />
 </VBox>
